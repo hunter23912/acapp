@@ -20,5 +20,26 @@ python manage.py startapp game
 ```bash
 python manage.py createsuperuser
 ```
+### .gitignore通配符示例
+```gitignore
+**/__pycache__/
+```
+匹配任意层级的子目录
 
+```gitignore
+*.swap
+```
+匹配任意目录下的所有.swap文件
+
+
+## 应用知识
+### 架构介绍
+- models
+  - 存储数据的结构，class, User
+- views
+  - 函数视图
+- urls
+  - 路由，决定调用哪个函数
+- templates
+  - 保存html文件
 
