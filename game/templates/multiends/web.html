@@ -1,21 +1,20 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <link rel="stylesheet" href="https://cdn.acwing.com/static/jquery-ui-dist/jquery-ui.min.css">
-    <script src="https://cdn/acwing.com/static/jquery/js/jquery-3.3.1.min.js"></script>
-    <link rel="stylesheet" href="{% static 'css/game.css' %}">
-    <script src="{% static "js/dist/game.js" %}"></script>
-    <meta charset="UTF-8">
+  <head>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <link rel="stylesheet" href="{% static 'css/game.css' %}" />
+    <script src="{% static 'js/dist/game.js' %}"></script>
+    <meta charset="UTF-8" />
     <title>Title</title>
-</head>
-<body style="margin: 0">
-    <div id="ac_game_12345678"></div>
+  </head>
+  <body style="margin: 0">
+    <div class="ac-game-root" id="ac_game_12345678"></div>
     <script>
-        $(document).ready(function(){
-            let ac_game = AcGame("ac_game_12345678");
-        });
+      $(document).ready(function () {
+        let ac_game = new AcGame("ac_game_12345678");
+      });
     </script>
-
-</body>
+  </body>
 </html>
