@@ -1,43 +1,49 @@
-# 一个伟大的关于django的巨著
-在这里我会记录django的开发流程
+# 一个伟大的关于 django 的巨著
 
-## django开发中常用操作
-### 初始化django项目
+在这里我会记录 django 的开发流程
+
+## django 开发中常用操作
+
+### 初始化 django 项目
+
 ```bash
 django-admin startproject myproject
 ```
 
-### 启动django开发服务器
+### 启动 django 开发服务器
+
 ```bash
 python manage.py runserver 0.0.0.0:8000
 ```
 
 ### 创建新的应用骨架
+
 ```bash
 python manage.py startapp game
 ```
+
 ### 创建超级用户
+
 ```bash
 python manage.py createsuperuser
 ```
-### .gitignore通配符示例
-```gitignore
-**/__pycache__/
-```
-匹配任意层级的子目录
+
+### .gitignore 通配符示例
 
 ```gitignore
-*.swap
-```
-匹配任意目录下的所有.swap文件
+**/__pycache__/ # 匹配任意层级的子目录
 
+*.swap # 匹配任意目录下的所有.swap 文件
+```
 
 ## 应用知识
+
 ### 架构介绍
+
 - `models`管理数据库数据
 - `views`管理`http`函数
 - `urls`管理路由，即链接与函数的对应关系
-- `templates`管理html文件
+- `templates`管理 html 文件
 - `static`管理静态文件
   - `css`对象的格式，比如位置、长宽、颜色背景、字体大小等
     - 通常一个项目的`css`文件就一个
@@ -48,10 +54,56 @@ python manage.py createsuperuser
   - `images`图片文件
   - `audio`音频文件
 - `consumers`管理`websocket`函数
+
 ### 项目结构
+
 #### 菜单
 
 #### 对战界面
 
 #### 设置
 
+## 5.部署 nginx 与对接 acapp
+
+### 1.增加容器映射端口：80 和 443
+
+- 登录容器，关闭所运行中的任务
+- 登录运行容器的服务器，然后执行
+
+```shell
+docker commit CONTAINER_NAME django_lesson:1.1 # 将容器保存成镜像，将CONTAINER_NAME替换成容器名称
+docker stop CONTAINER_NAME # 关闭容器
+docker rm CONTAINER_NAME # 删除容器
+
+# 使用保存的镜像重新创建容器
+docker run -p 20000:22 -p 8000:8000 -p 80:80 -p 443:443 --name CONTAINER_NAME -itd django_lesson:1.1
+```
+
+### 3.修改 django 项目的配置
+
+- 打开 `settings.py` 文件：
+  - 将分配的域名添加到`ALLOWED_HOSTS`列表中，注意只需要添加`https://`后面的部分。
+  - 令`DEBUG = false`。
+- 归档`static`文件
+  - `python manage.py collectstatic`
+
+### 4.配置 uwsgi
+
+- 在 django 项目中添加 uwsgi 的配置文件：`scripts/uwsgi.ini`，内容如下：
+
+```ini
+[uwsgi]
+socket = 127.0.0.1:8000
+chdir = /home/acs/acapp
+wsgi-file = acapp/wsgi.py
+master = true
+processes = 2
+threads = 5
+vacuum = true
+```
+
+启动 uwsgi 服务：
+
+```shell
+uwsgi --ini scripts/uwsgi.ini
+```
