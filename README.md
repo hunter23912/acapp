@@ -79,6 +79,17 @@ docker rm CONTAINER_NAME # 删除容器
 docker run -p 20000:22 -p 8000:8000 -p 80:80 -p 443:443 --name CONTAINER_NAME -itd django_lesson:1.1
 ```
 
+### 2.创建 nginx 配置文件以及 https 证书
+
+将`nginx.conf`中的内容写入服务器`/etc/nginx/nginx.conf`文件中。
+将`acapp.key`内容写到服务`/etc/nginx/cert/acapp.key`文件中。
+将`acapp.pem`内容写到服务`/etc/nginx/cert/acapp.pem`文件中。
+然后启动 nginx 服务
+
+```shell
+sudo /etc/init.d/nginx.start
+```
+
 ### 3.修改 django 项目的配置
 
 - 打开 `settings.py` 文件：
@@ -107,3 +118,19 @@ vacuum = true
 ```shell
 uwsgi --ini scripts/uwsgi.ini
 ```
+
+## 6.创建用户管理系统
+
+### 1.将自定义用户表添加到管理员后台
+
+```shell
+python manage.py makemigrations
+
+python manage.py migrate
+```
+
+### 2.注册登录时涉及的后端交互
+
+- `views` 处理数据，与数据库交互，处理业务逻辑
+- `urls` 处理路由，链接与函数的映射
+- `js` 前端如何调用
