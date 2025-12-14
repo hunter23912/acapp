@@ -119,9 +119,9 @@ vacuum = true
 uwsgi --ini scripts/uwsgi.ini
 ```
 
-## 6.创建用户管理系统
+## 6.1 创建用户管理系统
 
-### 1.将自定义用户表添加到管理员后台
+### 1.django 的更新数据库命令
 
 ```shell
 python manage.py makemigrations
@@ -134,3 +134,52 @@ python manage.py migrate
 - `views` 处理数据，与数据库交互，处理业务逻辑
 - `urls` 处理路由，链接与函数的映射
 - `js` 前端如何调用
+
+## 6.2 实现第三方登录（OAuth2 协议）
+
+### 1.在 django 中集成 redis
+
+- 安装`django_redis`
+  `pip install django_redis`
+
+- 配置`settings.py`
+
+```python
+CACHES = {
+  'default': {
+    'BACKEND': 'django_redis.cache.RedisCache',
+    'LOCATION': 'redis://127.0.0.1:6379/1',
+    "OPTIONS": {
+      "CLIENT_CLASS": "django_redis.client.DefaultClient",
+    },
+  },
+}
+USER_AGENTS_CACHE = 'default'
+```
+
+- 启动`redis-server`
+  `sudo redis-server /etc/redis/redis.conf`
+
+### 2.web 端一键登录
+
+- OAuth2 认证流程
+
+  ```mermaid
+  sequenceDiagram
+  participant 用户浏览器
+  participant 客户端(你的网站)
+  participant 第三方平台
+
+    用户浏览器->>客户端(你的网站): 点击“第三方登录”
+    客户端(你的网站)->>用户浏览器: 跳转到第三方授权页面
+    用户浏览器->>第三方平台: 请求授权码
+    第三方平台-->>用户浏览器: 展示授权页面
+    用户浏览器->>第三方平台: 用户同意授权
+    第三方平台-->>用户浏览器: 重定向回调地址并携带授权码
+    用户浏览器->>客户端(你的网站): 携带授权码访问回调地址
+    客户端(你的网站)->>第三方平台: 用授权码换取access_token
+    第三方平台-->>客户端(你的网站): 返回access_token
+    客户端(你的网站)->>第三方平台: 用access_token请求用户信息
+    第三方平台-->>客户端(你的网站): 返回用户信息
+    客户端(你的网站)->>用户浏览器: 完成登录
+  ```

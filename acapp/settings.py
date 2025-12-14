@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-aq-9+1umj*p*680bmp+0%yg)8mm34vsz189zf1@e0m)^5!b1^j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [] # 未来上线时改成具体域名
+ALLOWED_HOSTS = ["localhost","q3236fea.natappfree.cc"] # 未来上线时改成具体域名
 
 
 # Application definition
@@ -82,6 +82,17 @@ DATABASES = {
     }
 }
 
+CACHES = {
+  'default': {
+    'BACKEND': 'django_redis.cache.RedisCache',
+    'LOCATION': 'redis://127.0.0.1:6379/1',
+    "OPTIONS": {
+      "CLIENT_CLASS": "django_redis.client.DefaultClient",
+    },
+  },
+}
+USER_AGENTS_CACHE = 'default'
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -130,4 +141,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
+    "https://q3236fea.natappfree.cc",  # 加上你的 natapp 域名
+    "http://q3236fea.natappfree.cc",   # 有时也建议加 http 版本
 ]
