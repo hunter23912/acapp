@@ -11,12 +11,12 @@ def get_state():
 
 def apply_code(request):
     appid = "165"
-    redirect_uri = quote("http://localhost:8000/settings/acwing/web/receive_code/")
+    redirect_uri = quote("http://113.44.43.227:8000/settings/acwing/web/receive_code/") # 这是授权码回调地址
     scope = "userinfo"
     state = get_state()
 
     cache.set(state, True, 7200) # 有效期2小时
-    apply_code_url = f"https://www.acwing.com/third_party/api/oauth2/web/authorize/"
+    apply_code_url = f"https://www.acwing.com/third_party/api/oauth2/web/authorize/" # 这是申请授权码的接口
 
     return JsonResponse({
         'result': "success",

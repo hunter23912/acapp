@@ -557,6 +557,8 @@ class Settings {
 
     this.$register.hide();
 
+    this.$acwing_login = this.$settings.find(".ac-game-settings-acwing img");
+
     this.root.$ac_game.append(this.$settings);
 
     this.start();
@@ -567,9 +569,18 @@ class Settings {
     this.add_listening_events();
   }
 
+  acwing_login() {
+    console.log("click acwing login");
+  }
+
   add_listening_events() {
+    let outer = this;
     this.add_listening_events_login();
     this.add_listening_events_register();
+
+    this.$acwing_login.click(() => {
+      outer.acwing_login();
+    });
   }
 
   add_listening_events_login() {
@@ -715,4 +726,3 @@ export class AcGame {
 }
 
 // ajax 表单
-
