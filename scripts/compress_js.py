@@ -22,4 +22,4 @@ with open(dist_file, 'w', encoding='utf-8') as outfile:
         with open(file, 'r', encoding='utf-8') as infile:
             outfile.write(infile.read())
             outfile.write('\n')
-print(f"合并完成，共 {len(js_files)} 个文件，输出到 {dist_file}")
+print(f"合并完成，共 {len(js_files)} 个文件，输出到 {dist_file.replace(os.sep, '/')}")

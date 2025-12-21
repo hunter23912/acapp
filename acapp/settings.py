@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -144,3 +145,15 @@ CORS_ALLOWED_ORIGINS = [
     "https://q3236fea.natappfree.cc",  # 加上你的 natapp 域名
     "http://q3236fea.natappfree.cc",   # 有时也建议加 http 版本
 ]
+
+ASGI_APPLICATION = 'acapp.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)],
+        },
+    },
+}
+
+ROOM_CAPACITY = 3

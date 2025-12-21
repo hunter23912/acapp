@@ -183,3 +183,28 @@ USER_AGENTS_CACHE = 'default'
     第三方平台-->>客户端(你的网站): 返回用户信息
     客户端(你的网站)->>用户浏览器: 完成登录
   ```
+
+## 7. 实现联机对战系统
+
+### 1.统一长度单位
+
+### 2.增加“联机对战”模式
+
+### 3.配置 django_channels
+
+启动`django_channels`:在`~/acapp`目录下执行：
+
+```shell
+daphne -b 0.0.0.0 -p 5015 acapp.asgi:application
+```
+
+专门用来执行 websocket 服务器
+
+### 4.编写同步函数
+
+需要同步的 4 个函数：
+
+- `create player`
+- `move to`
+- `shoot fireball`
+- `attack`

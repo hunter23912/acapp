@@ -5,6 +5,19 @@ class AcGameObject {
     AC_GAME_OBJECTS.push(this);
     this.has_called_start = false; // 是否执行过start函数
     this.timedelta = 0; // 当前帧距离上一帧的时间间隔，单位毫秒
+    this.uuid = this.create_uuid(); // 每个对象的唯一标识符
+
+    console.log(this.uuid);
+  }
+
+  create_uuid() {
+    // 创建一个唯一标识符
+    let res = "";
+    for (let i = 0; i < 8; i++) {
+      let x = Math.floor(Math.random() * 10); // 返回[0,10)之间的随机整数
+      res += x;
+    }
+    return res;
   }
 
   start() {
