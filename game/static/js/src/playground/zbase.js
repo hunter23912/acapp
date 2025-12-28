@@ -21,7 +21,7 @@ class AcGamePlayground {
   }
 
   resize() {
-    console.log("resize");
+    ("resize");
     // 调整地图大小
     this.width = this.$playground.width();
     this.height = this.$playground.height();
@@ -37,6 +37,10 @@ class AcGamePlayground {
     // 打开playground界面
     this.$playground.show();
     this.game_map = new GameMap(this);
+    this.mode = mode;
+    this.state = "waiting"; // 状态机：waiting -> fighting -> over 每个地图的三个状态
+    this.notice_board = new NoticeBoard(this);
+    this.player_count = 0;
 
     this.resize();
 

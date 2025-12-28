@@ -116,7 +116,7 @@ class Settings {
   }
 
   acwing_login() {
-    console.log("click acwing login");
+    ("click acwing login");
     $.ajax({
       url: "http://localhost:8000/settings/acwing/web/apply_code/",
       type: "GET",
@@ -170,7 +170,7 @@ class Settings {
         password: password,
       },
       success: function (resp) {
-        console.log(resp);
+        resp;
         if (resp.result === "success") {
           location.reload(); // 刷新页面
         } else {
@@ -196,7 +196,7 @@ class Settings {
         password_confirm: password_confirm,
       },
       success: function (resp) {
-        console.log(resp);
+        resp;
         if (resp.result === "success") {
           location.reload(); // 刷新页面
         } else {
@@ -209,18 +209,19 @@ class Settings {
   logout_on_remote() {
     // 在远程服务器上登出
     if (this.platform == "ACAPP") {
-      return false;
+      this.root.AcOS.api.window.close();
+    } else {
+      $.ajax({
+        url: "http://localhost:8000/settings/logout/",
+        type: "GET",
+        success: function (resp) {
+          resp;
+          if (resp.result === "success") {
+            location.reload(); // 刷新页面
+          }
+        },
+      });
     }
-    $.ajax({
-      url: "http://localhost:8000/settings/logout/",
-      type: "GET",
-      success: function (resp) {
-        console.log(resp);
-        if (resp.result === "success") {
-          location.reload(); // 刷新页面
-        }
-      },
-    });
   }
 
   register() {
@@ -243,7 +244,7 @@ class Settings {
       scope,
       state,
       function(resp) {
-        console.log(resp);
+        resp;
         if (resp.result === "success") {
           outer.username = resp.username;
           outer.phote = resp.photo;
@@ -274,7 +275,7 @@ class Settings {
       type: "GET",
       data: { platform: outer.platform },
       success: function (resp) {
-        console.log(resp);
+        resp;
         if (resp.result === "success") {
           outer.username = resp.username;
           outer.photo = resp.photo;

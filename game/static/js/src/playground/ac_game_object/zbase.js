@@ -7,7 +7,7 @@ class AcGameObject {
     this.timedelta = 0; // 当前帧距离上一帧的时间间隔，单位毫秒
     this.uuid = this.create_uuid(); // 每个对象的唯一标识符
 
-    console.log(this.uuid);
+    this.uuid;
   }
 
   create_uuid() {
@@ -28,13 +28,13 @@ class AcGameObject {
     // 每一帧都会执行一次
   }
 
-  on_destroyed() {
+  on_destroy() {
     // 在被销毁前执行一次
   }
 
   destroy() {
     // 删除当前对象、
-    this.on_destroyed();
+    this.on_destroy();
     for (let i = 0; i < AC_GAME_OBJECTS.length; i++) {
       if (AC_GAME_OBJECTS[i] === this) {
         AC_GAME_OBJECTS.splice(i, 1);

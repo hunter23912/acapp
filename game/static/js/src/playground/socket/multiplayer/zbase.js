@@ -21,20 +21,40 @@ class MultiPlayerSocket {
       let event = data.event;
       if (event === "create_player") {
         outer.receive_create_player(uuid, data.username, data.photo);
+      } else if (event === "move_to") {
+        outer.receive_move_to(uuid, data.tx, data.ty);
+      } else if (event === "shoot_fireball") {
+        outer.receive_shoot_fireball(uuid, data.tx, data.ty, data.ball_uuid);
+      } else if (event === "attack") {
+        outer.receive_attack(uuid, data.attackee_uuid, data.x, data.y, data.angle, data.damage, data.ball_uuid);
+      } else if (event === "flash") {
+        outer.receive_flash(uuid, data.tx, data.ty);
       }
     };
   }
 
   send_create_player(username, photo) {
     let outer = this;
+    const now = new Date();
+    const time_str = now.toLocaleTimeString("zh-CN", { hour12: false }); // 只获取本地时间24小时制的时分秒
     this.ws.send(
       JSON.stringify({
         event: "create_player",
         uuid: outer.uuid,
         username: username,
         photo: photo,
+        created_at: time_str,
       })
     );
+  }
+
+  get_player(uuid) {
+    let players = this.playground.players;
+    for (let i = 0; i < players.length; i++) {
+      let player = players[i];
+      if (player.uuid === uuid) return player;
+    }
+    return null;
   }
 
   receive_create_player(uuid, username, photo) {
@@ -55,5 +75,90 @@ class MultiPlayerSocket {
     );
     player.uuid = uuid;
     this.playground.players.push(player);
+  }
+
+  send_move_to(tx, ty) {
+    let outer = this;
+    this.ws.send(
+      JSON.stringify({
+        event: "move_to",
+        uuid: outer.uuid,
+        tx: tx,
+        ty: ty,
+      })
+    );
+  }
+
+  receive_move_to(uuid, tx, ty) {
+    let player = this.get_player(uuid);
+    if (player) {
+      player.move_to(tx, ty);
+    }
+  }
+
+  send_shoot_fireball(tx, ty, ball_uuid) {
+    let outer = this;
+    this.ws.send(
+      JSON.stringify({
+        event: "shoot_fireball",
+        uuid: outer.uuid,
+        tx: tx,
+        ty: ty,
+        ball_uuid: ball_uuid,
+      })
+    );
+  }
+
+  receive_shoot_fireball(uuid, tx, ty, ball_uuid) {
+    let player = this.get_player(uuid);
+    if (player) {
+      let fireball = player.shoot_fireball(tx, ty);
+      fireball.uuid = ball_uuid;
+    }
+  }
+
+  send_attack(attackee_uuid, x, y, angle, damage, ball_uuid) {
+    // 只在攻击者窗口计算有效攻击，并同步玩家坐标，避免随着计算延迟，玩家坐标误差增大
+    let outer = this;
+    this.ws.send(
+      JSON.stringify({
+        event: "attack",
+        uuid: outer.uuid,
+        attackee_uuid: attackee_uuid,
+        x: x,
+        y: y,
+        angle: angle,
+        damage: damage,
+        ball_uuid: ball_uuid,
+      })
+    );
+  }
+
+  receive_attack(attacker_uuid, attackee_uuid, x, y, angle, damage, ball_uuid) {
+    let attacker = this.get_player(attacker_uuid);
+    let attackee = this.get_player(attackee_uuid);
+    if (attacker && attackee) {
+      // 本次攻击玩家未死亡
+      attackee.receive_attack(x, y, angle, damage, ball_uuid, attacker);
+    }
+  }
+
+  send_flash(tx, ty) {
+    let outer = this;
+    this.ws.send(
+      JSON.stringify({
+        event: "flash",
+        uuid: outer.uuid,
+        tx: tx,
+        ty: ty,
+      })
+    );
+  }
+
+  receive_flash(uuid, tx, ty) {
+    let player = this.get_player(uuid);
+    if (player) {
+      player.flash(tx, ty);
+    }
   }
 }
