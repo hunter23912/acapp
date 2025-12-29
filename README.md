@@ -240,3 +240,5 @@ daphne -b 0.0.0.0 -p 5015 acapp.asgi:application
 - `move to`
 - `shoot fireball`
 - `attack`
+
+## 8. 实现聊天系统
