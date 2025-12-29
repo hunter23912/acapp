@@ -232,6 +232,8 @@ daphne -b 0.0.0.0 -p 5015 acapp.asgi:application
 
 专门用来执行 websocket 服务器
 
+> 连接远程服务器的`redis`时，需要安全组放通 6379 端口，并且修改`/etc/redis/redis.conf`文件，允许监听外机，关闭保护模式
+
 ### 4.编写同步函数
 
 需要同步的 4 个函数：
@@ -242,3 +244,19 @@ daphne -b 0.0.0.0 -p 5015 acapp.asgi:application
 - `attack`
 
 ## 8. 实现聊天系统
+
+### 8.1
+
+实现类似于 LOL 游戏内的在线聊天系统
+
+### 8.2 加密、压缩 js 代码
+
+- 安装`terser`：
+  ```shell
+  apt install npm
+  npm install terser -g
+  ```
+- 使用方式：
+  ```shell
+  terser game.js -c -m
+  ```

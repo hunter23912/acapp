@@ -35,13 +35,12 @@ class Player extends AcGameObject {
     if (this.character === "me") {
       this.fireball_coldtime = Player.FIREBALL_CD; // 火球技能冷却时间，单位秒
       this.fireball_img = new Image();
-      this.fireball_img.src = "https://picx.zhimg.com/80/v2-f02922ec296d45408e7e00827502037b_720w.webp";
+      this.fireball_img.src = "/static/image/playground/fireball.webp";
 
       this.flash_coldtime = Player.FLASH_CD; // 闪现技能冷却时间，单位秒
 
       this.flash_img = new Image();
-      this.flash_img.src =
-        "https://bkimg.cdn.bcebos.com/pic/279759ee3d6d55fb660015bb66224f4a21a4dd6d?x-bce-process=image/format,f_auto/resize,m_lfit,limit_1,h_128";
+      this.flash_img.src = "/static/image/playground/flash.webp";
     }
   }
 
@@ -222,6 +221,8 @@ class Player extends AcGameObject {
   update() {
     this.spent_time += this.timedelta / 1000;
 
+    this.update_win();
+
     if (this.character === "me" && this.playground.state === "fighting") {
       this.update_coldtime();
     }
@@ -229,6 +230,13 @@ class Player extends AcGameObject {
     this.update_move();
 
     this.render();
+  }
+
+  update_win() {
+    if (this.playground.state === "fighting" && this.character == "me" && this.playground.players.length === 1) {
+      this.playground.state = "over";
+      this.playground.score_board.win();
+    }
   }
 
   update_coldtime() {
@@ -340,7 +348,10 @@ class Player extends AcGameObject {
 
   on_destroy() {
     if (this.character === "me") {
-      this.playground.state = "over";
+      if (this.playground.state === "fighting") {
+        this.playground.state = "over";
+        this.playground.score_board.lose();
+      }
     }
     for (let i = 0; i < this.playground.players.length; i++) {
       if (this.playground.players[i] === this) {

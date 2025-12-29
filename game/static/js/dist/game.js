@@ -88,6 +88,10 @@ class AcGameObject {
     // 每一帧都会执行一次
   }
 
+  late_update() {
+    // 每一帧的最后执行一次
+  }
+
   on_destroy() {
     // 在被销毁前执行一次
   }
@@ -116,6 +120,13 @@ let AC_GAME_ANIMATION = function (timestamp) {
       obj.update();
     }
   }
+
+  // 在每一帧的最后，所有物体创建完成后，执行late_update函数
+  for (let i = 0; i < AC_GAME_OBJECTS.length; i++) {
+    let obj = AC_GAME_OBJECTS[i];
+    obj.late_update();
+  }
+
   last_timestamp = timestamp;
   requestAnimationFrame(AC_GAME_ANIMATION); // 下一帧继续执行
 };
@@ -348,13 +359,12 @@ class Player extends AcGameObject {
     if (this.character === "me") {
       this.fireball_coldtime = Player.FIREBALL_CD; // 火球技能冷却时间，单位秒
       this.fireball_img = new Image();
-      this.fireball_img.src = "https://picx.zhimg.com/80/v2-f02922ec296d45408e7e00827502037b_720w.webp";
+      this.fireball_img.src = "/static/image/playground/fireball.webp";
 
       this.flash_coldtime = Player.FLASH_CD; // 闪现技能冷却时间，单位秒
 
       this.flash_img = new Image();
-      this.flash_img.src =
-        "https://bkimg.cdn.bcebos.com/pic/279759ee3d6d55fb660015bb66224f4a21a4dd6d?x-bce-process=image/format,f_auto/resize,m_lfit,limit_1,h_128";
+      this.flash_img.src = "/static/image/playground/flash.webp";
     }
   }
 
@@ -535,6 +545,8 @@ class Player extends AcGameObject {
   update() {
     this.spent_time += this.timedelta / 1000;
 
+    this.update_win();
+
     if (this.character === "me" && this.playground.state === "fighting") {
       this.update_coldtime();
     }
@@ -542,6 +554,13 @@ class Player extends AcGameObject {
     this.update_move();
 
     this.render();
+  }
+
+  update_win() {
+    if (this.playground.state === "fighting" && this.character == "me" && this.playground.players.length === 1) {
+      this.playground.state = "over";
+      this.playground.score_board.win();
+    }
   }
 
   update_coldtime() {
@@ -653,7 +672,10 @@ class Player extends AcGameObject {
 
   on_destroy() {
     if (this.character === "me") {
-      this.playground.state = "over";
+      if (this.playground.state === "fighting") {
+        this.playground.state = "over";
+        this.playground.score_board.lose();
+      }
     }
     for (let i = 0; i < this.playground.players.length; i++) {
       if (this.playground.players[i] === this) {
@@ -661,6 +683,80 @@ class Player extends AcGameObject {
         break;
       }
     }
+  }
+}
+
+class ScoreBoard extends AcGameObject {
+  constructor(playground) {
+    super();
+    this.playground = playground;
+    this.ctx = this.playground.game_map.ctx;
+
+    this.state = null; // win, lose
+
+    this.win_img = new Image();
+    this.win_img.src = "/static/image/playground/win.svg";
+
+    this.lose_img = new Image();
+
+    this.lose_img.src = "/static/image/playground/lose.svg";
+  }
+
+  start() {}
+
+  add_listening_events() {
+    let $canvas = this.playground.game_map.$canvas;
+
+    $canvas.on(`click.${this.uuid}`, () => {
+      this.playground.hide();
+      this.playground.root.menu.show();
+    });
+  }
+
+  win() {
+    this.state = "win";
+
+    setTimeout(() => {
+      this.add_listening_events();
+    }, 1000);
+  }
+
+  lose() {
+    this.state = "lose";
+    setTimeout(() => {
+      this.add_listening_events();
+    }, 1000);
+  }
+
+  late_update() {
+    this.render();
+  }
+
+  render() {
+    let max_len = this.playground.height; // 最大边长限制
+    let img = null;
+    if (this.state === "win") img = this.win_img;
+    else if (this.state === "lose") img = this.lose_img;
+    if (!img || !img.complete) return; // 不加的话会导致第一秒执行时报错
+
+    // 获取原始宽高
+    let w = img.naturalWidth || img.width;
+    let h = img.naturalHeight || img.height;
+    // 按最大边长等比例缩放
+    let max_w = this.playground.width * 0.8;
+    let max_h = this.playground.height * 0.8;
+    let scale = Math.min(max_w / w, max_h / h);
+    let draw_w = w * scale;
+    let draw_h = h * scale;
+
+    // params: 图片，xy坐标，宽高
+    this.ctx.drawImage(
+      img,
+      this.playground.width / 2 - draw_w / 2,
+      this.playground.height / 2 - draw_h / 2,
+      draw_w,
+      draw_h
+    );
   }
 }
 
@@ -961,13 +1057,29 @@ class AcGamePlayground {
   }
 
   start() {
-    $(window).resize(() => {
+    let uuid = this.create_uuid();
+
+    $(window).on(`resize.${uuid}`, () => {
       this.resize();
     });
+
+    if (this.root.AcOS) {
+      this.root.AcOS.api.window.one_close(function () {
+        $(window).off(`resize.${uuid}`);
+      });
+    }
+  }
+
+  create_uuid() {
+    let res = "";
+    for (let i = 0; i < 8; i++) {
+      let x = parseInt(Math.floor(Math.random() * 10)); // 0-9
+      res += x;
+    }
+    return res;
   }
 
   resize() {
-    ("resize");
     // 调整地图大小
     this.width = this.$playground.width();
     this.height = this.$playground.height();
@@ -986,6 +1098,7 @@ class AcGamePlayground {
     this.mode = mode;
     this.state = "waiting"; // 状态机：waiting -> fighting -> over 每个地图的三个状态
     this.notice_board = new NoticeBoard(this);
+    this.score_board = new ScoreBoard(this);
     this.player_count = 0;
 
     this.resize();
@@ -1022,8 +1135,30 @@ class AcGamePlayground {
       };
     }
   }
+
   hide() {
     // 关闭playground界面
+    while (this.players && this.players.length > 0) {
+      this.players[0].destroy();
+    }
+
+    if (this.game_map) {
+      this.game_map.destroy();
+      this.game_map = null;
+    }
+
+    if (this.notice_board) {
+      this.notice_board.destroy();
+      this.notice_board = null;
+    }
+
+    if (this.score_board) {
+      this.score_board.destroy();
+      this.score_board = null;
+    }
+
+    this.$playground.empty();
+
     this.$playground.hide();
   }
 }
