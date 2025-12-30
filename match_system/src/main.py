@@ -1,0 +1,142 @@
+import glob
+import sys
+sys.path.insert(0, glob.glob('../../')[0]) # 导入的包的路径：/项目根目录
+
+from match_server.match_service import Match
+
+from thrift.transport import TSocket
+from thrift.transport import TTransport
+from thrift.protocol import TBinaryProtocol
+from thrift.server import TServer
+
+from queue import Queue # 线程安全的队列
+from time import sleep
+from threading import Thread
+
+from acapp.asgi import channel_layer
+assert channel_layer is not None, "客户端 channel_layer 未初始化"
+
+from asgiref.sync import async_to_sync
+from django.core.cache import cache
+
+queue = Queue()
+
+class Player:
+    def __init__(self, score, uuid, username, photo, channel_name):
+        self.score = score
+        self.uuid = uuid
+        self.username = username
+        self.photo = photo
+        self.channel_name = channel_name
+        self.waiting_time = 0  # 等待时间，单位：秒
+
+# 匹配池
+class Pool:
+    def __init__(self):
+        self.players = []
+    
+    def add_player(self, player):
+        self.players.append(player)
+    
+    def check_match(self, a, b):
+        dt = abs(a.score - b.score)
+        a_max_dif = a.waiting_time * 50 # 每位玩家允许的最大分差，随等待时间增加而增加
+        b_max_dif = b.waiting_time * 50
+        return dt <= a_max_dif and dt <= b_max_dif
+    
+    def match_success(self, ps):
+        print('Match Success: %s %s %s' % (ps[0].username, ps[1].username, ps[2].username))
+        room_name = "room-%s-%s-%s" % (ps[0].uuid, ps[1].uuid, ps[2].uuid)
+        players = []
+        for p in ps:
+            async_to_sync(channel_layer.group_add)(
+                room_name,
+                p.channel_name
+            )
+            players.append({
+                'uuid': p.uuid,
+                'username': p.username,
+                'photo': p.photo,
+                'hp': 100,
+            })
+            
+        cache.set(room_name, players, timeout=3600) # 缓存房间信息，过期时间1小时
+            
+        # 先加完玩家，再广播
+        for p in ps:
+            async_to_sync(channel_layer.group_send)(
+                room_name,
+                {
+                    'type': "group_send_event",
+                    'event': 'create_player',
+                    'uuid': p.uuid,
+                    'username': p.username,
+                    'photo': p.photo
+                }
+            )
+        
+    def increase_waiting_time(self):
+        for player in self.players:
+            player.waiting_time += 1
+    
+    def match(self):
+        while len(self.players) >= 3:
+            self.players = sorted(self.players, key=lambda p: p.score)
+            flag = False
+            for i in range(len(self.players) - 2):
+                a, b, c = self.players[i], self.players[i+1], self.players[i+2]
+                
+                # 三人两两满足匹配条件
+                if self.check_match(a, b) and self.check_match(b, c) and self.check_match(a, c):
+                    self.match_success([a, b, c])
+                    self.players = self.players[:i] + self.players[i+3:]
+                    flag = True
+                    break
+            if not flag:
+                break
+                    
+
+class MatchHandler:
+    def add_player(self, score, uuid, username, photo, channel_name):
+        player = Player(score, uuid, username, photo, channel_name)
+        queue.put(player)
+        print('Add Player: %s %d' % (player.username, player.score))
+        return 0
+    
+def get_player_from_queue():
+    try:
+        return queue.get_nowait()
+    except:
+        return None
+
+def worker():
+    pool = Pool()
+    while True:
+        player = get_player_from_queue()
+        if player:
+            pool.add_player(player)
+        else:
+            pool.match()
+            pool.increase_waiting_time()
+            sleep(1)
+    
+    
+
+if __name__ == '__main__':
+    handler = MatchHandler()
+    processor = Match.Processor(handler)
+    transport = TSocket.TServerSocket(host='127.0.0.1', port=9090)
+    tfactory = TTransport.TBufferedTransportFactory()
+    pfactory = TBinaryProtocol.TBinaryProtocolFactory()
+
+    server = TServer.TThreadedServer(
+        processor, transport, tfactory, pfactory)
+
+    Thread(target=worker, daemon=True).start() # True表明杀死主线程时，子线程也会被杀死
+
+    print('Starting the server...')
+    try:
+        server.serve()
+    except KeyboardInterrupt:
+        print('Server stopped by Ctrl+C')
+    print('done.')
