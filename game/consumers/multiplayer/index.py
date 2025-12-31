@@ -16,15 +16,20 @@ from channels.db import database_sync_to_async
 # websocket服务器
 class MultiPlayer(AsyncWebsocketConsumer):
     async def connect(self):
-        await self.accept()    
+        user = self.scope['user']
+        print(user, user.is_authenticated)
+        if user.is_authenticated:
+            await self.accept()
+        else:
+            await self.close()
         
-    async def disconnect(self, close_code):
-        if self.room_name:
+    async def disconnect(self):
+        if hasattr(self, 'room_name') and self.room_name:
             await self.channel_layer.group_discard(self.room_name, self.channel_name)
     
     # 与匹配系统交互的函数
     async def create_player(self, data):
-        self.room_name = ""
+        self.room_name = None
         self.uuid = data['uuid']
         # Make socket
         transport = TSocket.TSocket('113.44.43.227', 9090)

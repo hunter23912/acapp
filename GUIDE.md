@@ -256,7 +256,7 @@ python manage.py migrate
 
 ---
 
-## 10. 前端 JS 压缩与混淆
+### 9.2. 前端 JS 压缩与混淆
 
 - 使用 terser 压缩混淆 JS 代码
 
@@ -265,3 +265,22 @@ python manage.py migrate
   npm install terser -g
   terser game.js -c -m
   ```
+
+## 10. Rest Framework 框架与 JWT 身份验证
+
+- 安装：
+
+  ```shell
+  pip install djangorestframework
+  pip install pyjwt
+  pip install djangorestframework-simplejwt # 最新维护版的子包
+  ```
+
+- 修改完`settings.py`后，执行：
+
+```shell
+python manage.py collectstatic # 将一些按装的库的webui的静态资源收集一下
+```
+
+- 注册登录实现 JWT 验证
+- 将 jwt 验证集成到`django_channels`

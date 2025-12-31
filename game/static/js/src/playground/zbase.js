@@ -22,7 +22,7 @@ class AcGamePlayground {
     });
 
     if (this.root.AcOS) {
-      this.root.AcOS.api.window.one_close(function () {
+      this.root.AcOS.api.window.one_close(() => {
         $(window).off(`resize.${uuid}`);
       });
     }

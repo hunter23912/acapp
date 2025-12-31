@@ -12,7 +12,7 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'acapp.settings')
 django.setup()
 
-from channels.auth import AuthMiddlewareStack
+from game.channelsmiddleware import JWTAuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
 from game.routing import websocket_urlpatterns
@@ -23,7 +23,7 @@ channel_layer = get_channel_layer()
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
-    "websocket": AuthMiddlewareStack(
+    "websocket": JWTAuthMiddlewareStack(
         URLRouter(
             websocket_urlpatterns
         )

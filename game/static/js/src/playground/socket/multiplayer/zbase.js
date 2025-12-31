@@ -2,7 +2,7 @@ class MultiPlayerSocket {
   constructor(playground) {
     this.playground = playground;
 
-    this.ws = new WebSocket("ws://localhost:8081/wss/multiplayer/");
+    this.ws = new WebSocket("ws://localhost:8081/wss/multiplayer/?token=" + playground.root.access);
 
     this.start();
   }
@@ -12,37 +12,35 @@ class MultiPlayerSocket {
 
   receive() {
     // 前端接收后端消息
-    let outer = this;
-    this.ws.onmessage = function (e) {
+    this.ws.onmessage = (e) => {
       let data = JSON.parse(e.data); // 将字符串转换为json对象
       let uuid = data.uuid;
-      if (uuid === outer.uuid) return false; // 消息是自己发的，忽略
+      if (uuid === this.uuid) return false; // 消息是自己发的，忽略
 
       let event = data.event;
       if (event === "create_player") {
-        outer.receive_create_player(uuid, data.username, data.photo);
+        this.receive_create_player(uuid, data.username, data.photo);
       } else if (event === "move_to") {
-        outer.receive_move_to(uuid, data.tx, data.ty);
+        this.receive_move_to(uuid, data.tx, data.ty);
       } else if (event === "shoot_fireball") {
-        outer.receive_shoot_fireball(uuid, data.tx, data.ty, data.ball_uuid);
+        this.receive_shoot_fireball(uuid, data.tx, data.ty, data.ball_uuid);
       } else if (event === "attack") {
-        outer.receive_attack(uuid, data.attackee_uuid, data.x, data.y, data.angle, data.damage, data.ball_uuid);
+        this.receive_attack(uuid, data.attackee_uuid, data.x, data.y, data.angle, data.damage, data.ball_uuid);
       } else if (event === "flash") {
-        outer.receive_flash(uuid, data.tx, data.ty);
+        this.receive_flash(uuid, data.tx, data.ty);
       } else if (event === "message") {
-        outer.receive_message(uuid, data.username, data.text);
+        this.receive_message(uuid, data.username, data.text);
       }
     };
   }
 
   send_create_player(username, photo) {
-    let outer = this;
     const now = new Date();
     const time_str = now.toLocaleTimeString("zh-CN", { hour12: false }); // 只获取本地时间24小时制的时分秒
     this.ws.send(
       JSON.stringify({
         event: "create_player",
-        uuid: outer.uuid,
+        uuid: this.uuid,
         username: username,
         photo: photo,
         created_at: time_str,
@@ -80,11 +78,10 @@ class MultiPlayerSocket {
   }
 
   send_move_to(tx, ty) {
-    let outer = this;
     this.ws.send(
       JSON.stringify({
         event: "move_to",
-        uuid: outer.uuid,
+        uuid: this.uuid,
         tx: tx,
         ty: ty,
       })
@@ -99,11 +96,10 @@ class MultiPlayerSocket {
   }
 
   send_shoot_fireball(tx, ty, ball_uuid) {
-    let outer = this;
     this.ws.send(
       JSON.stringify({
         event: "shoot_fireball",
-        uuid: outer.uuid,
+        uuid: this.uuid,
         tx: tx,
         ty: ty,
         ball_uuid: ball_uuid,
@@ -121,11 +117,10 @@ class MultiPlayerSocket {
 
   send_attack(attackee_uuid, x, y, angle, damage, ball_uuid) {
     // 只在攻击者窗口计算有效攻击，并同步玩家坐标，避免随着计算延迟，玩家坐标误差增大
-    let outer = this;
     this.ws.send(
       JSON.stringify({
         event: "attack",
-        uuid: outer.uuid,
+        uuid: this.uuid,
         attackee_uuid: attackee_uuid,
         x: x,
         y: y,
@@ -146,11 +141,10 @@ class MultiPlayerSocket {
   }
 
   send_flash(tx, ty) {
-    let outer = this;
     this.ws.send(
       JSON.stringify({
         event: "flash",
-        uuid: outer.uuid,
+        uuid: this.uuid,
         tx: tx,
         ty: ty,
       })
@@ -165,11 +159,10 @@ class MultiPlayerSocket {
   }
 
   send_message(username, text) {
-    let outer = this;
     this.ws.send(
       JSON.stringify({
         event: "message",
-        uuid: outer.uuid,
+        uuid: this.uuid,
         username: username,
         text: text,
       })

@@ -32,18 +32,17 @@ class AcGameMenu {
   }
 
   add_listening_events() {
-    let outer = this;
-    this.$single_mode.click(function () {
-      outer.hide();
-      outer.root.playground.show("single mode");
+    this.$single_mode.click(() => {
+      this.hide();
+      this.root.playground.show("single mode");
     });
-    this.$multi_mode.click(function () {
-      outer.hide();
-      outer.root.playground.show("multi mode");
+    this.$multi_mode.click(() => {
+      this.hide();
+      this.root.playground.show("multi mode");
     });
-    this.$settings.click(function () {
+    this.$settings.click(() => {
       ("click settings");
-      outer.root.settings.logout_on_remote();
+      this.root.settings.logout_on_remote();
     });
   }
 
@@ -109,7 +108,7 @@ class AcGameObject {
 }
 
 let last_timestamp; // 上一帧的时间戳
-let AC_GAME_ANIMATION = function (timestamp) {
+let AC_GAME_ANIMATION = (timestamp) => {
   for (let i = 0; i < AC_GAME_OBJECTS.length; i++) {
     let obj = AC_GAME_OBJECTS[i];
     if (!obj.has_called_start) {
@@ -388,71 +387,70 @@ class Player extends AcGameObject {
   }
 
   add_listening_events() {
-    let outer = this;
-    this.playground.game_map.$canvas.on("contextmenu", function () {
-      return false;
+    this.playground.game_map.$canvas.on("contextmenu", (e) => {
+      e.preventDefault();
     });
-    this.playground.game_map.$canvas.mousedown(function (e) {
+    this.playground.game_map.$canvas.mousedown((e) => {
       // 通过jquery注册鼠标按下事件
-      if (outer.playground.state !== "fighting") return true;
-      const rect = outer.ctx.canvas.getBoundingClientRect(); // 获取canvas的边界信息
+      if (this.playground.state !== "fighting") return true;
+      const rect = this.ctx.canvas.getBoundingClientRect(); // 获取canvas的边界信息
       if (e.which === 3) {
         // 右键鼠标，移动位置
-        let tx = (e.clientX - rect.left) / outer.playground.scale;
-        let ty = (e.clientY - rect.top) / outer.playground.scale;
-        outer.move_to(tx, ty); // 本窗口的玩家移动
+        let tx = (e.clientX - rect.left) / this.playground.scale;
+        let ty = (e.clientY - rect.top) / this.playground.scale;
+        this.move_to(tx, ty); // 本窗口的玩家移动
 
-        if (outer.playground.mode === "multi mode") {
-          outer.playground.mps.send_move_to(tx, ty); // 发送给服务器，同步其他玩家窗口中的移动
+        if (this.playground.mode === "multi mode") {
+          this.playground.mps.send_move_to(tx, ty); // 发送给服务器，同步其他玩家窗口中的移动
         }
       } else if (e.which === 1) {
         // 左键鼠标，释放技能
-        let tx = (e.clientX - rect.left) / outer.playground.scale;
-        let ty = (e.clientY - rect.top) / outer.playground.scale;
-        if (outer.cur_skill === "fireball") {
-          if (outer.fireball_coldtime > outer.eps) return false;
-          let fireball = outer.shoot_fireball(tx, ty);
-          if (outer.playground.mode === "multi mode") {
-            outer.playground.mps.send_shoot_fireball(tx, ty, fireball.uuid);
+        let tx = (e.clientX - rect.left) / this.playground.scale;
+        let ty = (e.clientY - rect.top) / this.playground.scale;
+        if (this.cur_skill === "fireball") {
+          if (this.fireball_coldtime > this.eps) return false;
+          let fireball = this.shoot_fireball(tx, ty);
+          if (this.playground.mode === "multi mode") {
+            this.playground.mps.send_shoot_fireball(tx, ty, fireball.uuid);
           }
-        } else if (outer.cur_skill === "flash") {
-          if (outer.flash_coldtime > outer.eps) return false;
-          outer.flash(tx, ty);
-          if (outer.playground.mode === "multi mode") {
-            outer.playground.mps.send_flash(tx, ty);
+        } else if (this.cur_skill === "flash") {
+          if (this.flash_coldtime > this.eps) return false;
+          this.flash(tx, ty);
+          if (this.playground.mode === "multi mode") {
+            this.playground.mps.send_flash(tx, ty);
           }
         }
 
-        outer.cur_skill = null;
+        this.cur_skill = null;
       }
     });
-    this.playground.game_map.$canvas.keydown(function (e) {
+    this.playground.game_map.$canvas.keydown((e) => {
       if (e.which === 13) {
         // enter键
-        if (outer.playground.mode === "multi mode") {
+        if (this.playground.mode === "multi mode") {
           // 多人模式下打开聊天输入框
-          outer.playground.chat_field.show_input();
+          this.playground.chat_field.show_input();
           return false;
         }
       } else if (e.which === 27) {
         // esc键
-        if (outer.playground.mode === "multi mode") {
-          outer.playground.chat_field.hide_input();
+        if (this.playground.mode === "multi mode") {
+          this.playground.chat_field.hide_input();
           return false;
         }
       }
-      if (outer.playground.state !== "fighting") return true;
+      if (this.playground.state !== "fighting") return true;
 
       if (e.which === 81) {
-        if (outer.fireball_coldtime > outer.eps) return true;
+        if (this.fireball_coldtime > this.eps) return true;
 
         // Q键
-        outer.cur_skill = "fireball";
+        this.cur_skill = "fireball";
         return false;
       } else if (e.which === 70) {
-        if (outer.flash_coldtime > outer.eps) return true;
+        if (this.flash_coldtime > this.eps) return true;
         // F键
-        outer.cur_skill = "flash";
+        this.cur_skill = "flash";
         return false;
       }
     });
@@ -742,7 +740,8 @@ class ScoreBoard extends AcGameObject {
     // 获取原始宽高
     let w = img.naturalWidth || img.width;
     let h = img.naturalHeight || img.height;
-    // 按最大边长等比例缩放
+
+    // min(w,h)的0.8倍作为缩放因子
     let max_w = this.playground.width * 0.8;
     let max_h = this.playground.height * 0.8;
     let scale = Math.min(max_w / w, max_h / h);
@@ -861,7 +860,7 @@ class MultiPlayerSocket {
   constructor(playground) {
     this.playground = playground;
 
-    this.ws = new WebSocket("ws://localhost:8081/wss/multiplayer/");
+    this.ws = new WebSocket("ws://localhost:8081/wss/multiplayer/?token=" + playground.root.access);
 
     this.start();
   }
@@ -871,37 +870,35 @@ class MultiPlayerSocket {
 
   receive() {
     // 前端接收后端消息
-    let outer = this;
-    this.ws.onmessage = function (e) {
+    this.ws.onmessage = (e) => {
       let data = JSON.parse(e.data); // 将字符串转换为json对象
       let uuid = data.uuid;
-      if (uuid === outer.uuid) return false; // 消息是自己发的，忽略
+      if (uuid === this.uuid) return false; // 消息是自己发的，忽略
 
       let event = data.event;
       if (event === "create_player") {
-        outer.receive_create_player(uuid, data.username, data.photo);
+        this.receive_create_player(uuid, data.username, data.photo);
       } else if (event === "move_to") {
-        outer.receive_move_to(uuid, data.tx, data.ty);
+        this.receive_move_to(uuid, data.tx, data.ty);
       } else if (event === "shoot_fireball") {
-        outer.receive_shoot_fireball(uuid, data.tx, data.ty, data.ball_uuid);
+        this.receive_shoot_fireball(uuid, data.tx, data.ty, data.ball_uuid);
       } else if (event === "attack") {
-        outer.receive_attack(uuid, data.attackee_uuid, data.x, data.y, data.angle, data.damage, data.ball_uuid);
+        this.receive_attack(uuid, data.attackee_uuid, data.x, data.y, data.angle, data.damage, data.ball_uuid);
       } else if (event === "flash") {
-        outer.receive_flash(uuid, data.tx, data.ty);
+        this.receive_flash(uuid, data.tx, data.ty);
       } else if (event === "message") {
-        outer.receive_message(uuid, data.username, data.text);
+        this.receive_message(uuid, data.username, data.text);
       }
     };
   }
 
   send_create_player(username, photo) {
-    let outer = this;
     const now = new Date();
     const time_str = now.toLocaleTimeString("zh-CN", { hour12: false }); // 只获取本地时间24小时制的时分秒
     this.ws.send(
       JSON.stringify({
         event: "create_player",
-        uuid: outer.uuid,
+        uuid: this.uuid,
         username: username,
         photo: photo,
         created_at: time_str,
@@ -939,11 +936,10 @@ class MultiPlayerSocket {
   }
 
   send_move_to(tx, ty) {
-    let outer = this;
     this.ws.send(
       JSON.stringify({
         event: "move_to",
-        uuid: outer.uuid,
+        uuid: this.uuid,
         tx: tx,
         ty: ty,
       })
@@ -958,11 +954,10 @@ class MultiPlayerSocket {
   }
 
   send_shoot_fireball(tx, ty, ball_uuid) {
-    let outer = this;
     this.ws.send(
       JSON.stringify({
         event: "shoot_fireball",
-        uuid: outer.uuid,
+        uuid: this.uuid,
         tx: tx,
         ty: ty,
         ball_uuid: ball_uuid,
@@ -980,11 +975,10 @@ class MultiPlayerSocket {
 
   send_attack(attackee_uuid, x, y, angle, damage, ball_uuid) {
     // 只在攻击者窗口计算有效攻击，并同步玩家坐标，避免随着计算延迟，玩家坐标误差增大
-    let outer = this;
     this.ws.send(
       JSON.stringify({
         event: "attack",
-        uuid: outer.uuid,
+        uuid: this.uuid,
         attackee_uuid: attackee_uuid,
         x: x,
         y: y,
@@ -1005,11 +999,10 @@ class MultiPlayerSocket {
   }
 
   send_flash(tx, ty) {
-    let outer = this;
     this.ws.send(
       JSON.stringify({
         event: "flash",
-        uuid: outer.uuid,
+        uuid: this.uuid,
         tx: tx,
         ty: ty,
       })
@@ -1024,11 +1017,10 @@ class MultiPlayerSocket {
   }
 
   send_message(username, text) {
-    let outer = this;
     this.ws.send(
       JSON.stringify({
         event: "message",
-        uuid: outer.uuid,
+        uuid: this.uuid,
         username: username,
         text: text,
       })
@@ -1064,7 +1056,7 @@ class AcGamePlayground {
     });
 
     if (this.root.AcOS) {
-      this.root.AcOS.api.window.one_close(function () {
+      this.root.AcOS.api.window.one_close(() => {
         $(window).off(`resize.${uuid}`);
       });
     }
@@ -1275,9 +1267,42 @@ class Settings {
     if (this.platform === "ACAPP") {
       this.getinfo_acapp();
     } else {
-      this.getinfo_web();
+      if (this.root.access) {
+        this.getinfo_web();
+        this.refresh_jwt_token();
+      } else {
+        this.login();
+      }
       this.add_listening_events();
     }
+  }
+
+  refresh_jwt_token() {
+    setInterval(() => {
+      $.ajax({
+        url: "http://localhost:8000/settings/token/refresh/",
+        type: "POST",
+        data: {
+          refresh: this.root.refresh,
+        },
+        success: (resp) => {
+          this.root.access = resp.access;
+        },
+      });
+    }, 270000); // 4.5分钟刷新一次token
+
+    setTimeout(() => {
+      $.ajax({
+        url: "http://localhost:8000/settings/ranklist",
+        type: "GET",
+        headers: {
+          Authorization: "Bearer " + this.root.access,
+        },
+        success: (resp) => {
+          console.log(resp);
+        },
+      });
+    }, 5000);
   }
 
   acwing_login() {
@@ -1285,7 +1310,7 @@ class Settings {
     $.ajax({
       url: "http://localhost:8000/settings/acwing/web/apply_code/",
       type: "GET",
-      success: function (resp) {
+      success: (resp) => {
         if (resp.result === "success") {
           window.location.replace(resp.apply_code_url);
         }
@@ -1294,12 +1319,11 @@ class Settings {
   }
 
   add_listening_events() {
-    let outer = this;
     this.add_listening_events_login();
     this.add_listening_events_register();
 
     this.$acwing_login.click(() => {
-      outer.acwing_login();
+      this.acwing_login();
     });
   }
 
@@ -1321,51 +1345,51 @@ class Settings {
     });
   }
 
-  login_on_remote() {
+  login_on_remote(username, password) {
     // 在远程服务器上登录
-    let username = this.$login_username.val();
-    let password = this.$login_password.val();
+    username = username || this.$login_username.val(); // 对传入的形参进行短路赋值
+    password = password || this.$login_password.val();
     this.$login_error_message.empty();
-    let outer = this;
+
     $.ajax({
-      url: "http://localhost:8000/settings/login/",
-      type: "GET",
+      url: "http://localhost:8000/settings/token/",
+      type: "POST",
       data: {
-        username: username,
-        password: password,
+        username,
+        password,
       },
-      success: function (resp) {
-        resp;
-        if (resp.result === "success") {
-          location.reload(); // 刷新页面
-        } else {
-          outer.$login_error_message.html(resp.result);
-        }
+      success: (resp) => {
+        this.root.access = resp.access;
+        this.root.refresh = resp.refresh;
+        this.refresh_jwt_token();
+        this.getinfo_web();
+      },
+      error: () => {
+        this.$login_error_message.html("用户名或密码错误");
       },
     });
   }
 
   register_on_remote() {
     // 在远程服务器上注册
-    let outer = this;
     let username = this.$register_username.val();
     let password = this.$register_password.val();
     let password_confirm = this.$register_password_confirm.val();
     this.$register_error_message.empty();
     $.ajax({
       url: "http://localhost:8000/settings/register/",
-      type: "GET",
+      type: "POST",
       data: {
-        username: username,
-        password: password,
-        password_confirm: password_confirm,
+        // JS当k-v一样时候，可以只写一个
+        username,
+        password,
+        password_confirm,
       },
-      success: function (resp) {
-        resp;
+      success: (resp) => {
         if (resp.result === "success") {
-          location.reload(); // 刷新页面
+          this.login_on_remote(username, password);
         } else {
-          outer.$register_error_message.html(resp.result);
+          this.$register_error_message.html(resp.result);
         }
       },
     });
@@ -1376,16 +1400,9 @@ class Settings {
     if (this.platform == "ACAPP") {
       this.root.AcOS.api.window.close();
     } else {
-      $.ajax({
-        url: "http://localhost:8000/settings/logout/",
-        type: "GET",
-        success: function (resp) {
-          resp;
-          if (resp.result === "success") {
-            location.reload(); // 刷新页面
-          }
-        },
-      });
+      this.root.access = "";
+      this.root.refresh = "";
+      location.href = "/";
     }
   }
 
@@ -1402,53 +1419,58 @@ class Settings {
   }
 
   acapp_login(appid, redirect_uri, scope, state) {
-    let outer = this;
     this.root.AcOS.api.oatuh2.authorize({
       appid,
       redirect_uri,
       scope,
       state,
-      function(resp) {
+      success: (resp) => {
         resp;
         if (resp.result === "success") {
-          outer.username = resp.username;
-          outer.phote = resp.photo;
-          outer.hide();
-          outer.root.menu.show();
+          this.username = resp.username;
+          this.photo = resp.photo;
+          this.hide();
+          this.root.menu.show();
+          console.log(resp);
+          this.root.access = resp.access;
+          this.root.refresh = resp.refresh;
+
+          this.refresh_jwt_token();
         }
       },
     });
   }
 
   getinfo_acapp() {
-    let outer = this;
     $.ajax({
       url: "http://localhost:8000/settings/acwing/acapp/apply_code/",
       type: "GET",
-      success: function (resp) {
+      success: (resp) => {
         if (resp.result === "success") {
-          outer.acapp_login(resp.appid, resp.redirect_uri, resp.scope, resp.state);
+          this.acapp_login(resp.appid, resp.redirect_uri, resp.scope, resp.state);
         }
       },
     });
   }
 
   getinfo_web() {
-    let outer = this;
     $.ajax({
       url: "http://localhost:8000/settings/getinfo/",
       type: "GET",
-      data: { platform: outer.platform },
-      success: function (resp) {
+      data: { platform: this.platform },
+      headers: {
+        Authorization: "Bearer " + this.root.access,
+      },
+      success: (resp) => {
         resp;
         if (resp.result === "success") {
-          outer.username = resp.username;
-          outer.photo = resp.photo;
-          outer.hide();
-          outer.root.menu.show();
+          this.username = resp.username;
+          this.photo = resp.photo;
+          this.hide();
+          this.root.menu.show();
         } else {
-          outer.login();
-          // outer.register();
+          this.login();
+          // this.register();
         }
       },
     });
@@ -1464,10 +1486,12 @@ class Settings {
 }
 
 export class AcGame {
-  constructor(id, AcOS) {
+  constructor(id, AcOS, access, refresh) {
     this.id = id;
     this.$ac_game = $("#" + id);
     this.AcOS = AcOS;
+    this.access = access;
+    this.refresh = refresh;
     this.settings = new Settings(this);
     this.menu = new AcGameMenu(this);
     this.playground = new AcGamePlayground(this);
@@ -1479,3 +1503,4 @@ export class AcGame {
 }
 
 // ajax 表单
+

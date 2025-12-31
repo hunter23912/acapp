@@ -64,71 +64,70 @@ class Player extends AcGameObject {
   }
 
   add_listening_events() {
-    let outer = this;
-    this.playground.game_map.$canvas.on("contextmenu", function () {
-      return false;
+    this.playground.game_map.$canvas.on("contextmenu", (e) => {
+      e.preventDefault();
     });
-    this.playground.game_map.$canvas.mousedown(function (e) {
+    this.playground.game_map.$canvas.mousedown((e) => {
       // 通过jquery注册鼠标按下事件
-      if (outer.playground.state !== "fighting") return true;
-      const rect = outer.ctx.canvas.getBoundingClientRect(); // 获取canvas的边界信息
+      if (this.playground.state !== "fighting") return true;
+      const rect = this.ctx.canvas.getBoundingClientRect(); // 获取canvas的边界信息
       if (e.which === 3) {
         // 右键鼠标，移动位置
-        let tx = (e.clientX - rect.left) / outer.playground.scale;
-        let ty = (e.clientY - rect.top) / outer.playground.scale;
-        outer.move_to(tx, ty); // 本窗口的玩家移动
+        let tx = (e.clientX - rect.left) / this.playground.scale;
+        let ty = (e.clientY - rect.top) / this.playground.scale;
+        this.move_to(tx, ty); // 本窗口的玩家移动
 
-        if (outer.playground.mode === "multi mode") {
-          outer.playground.mps.send_move_to(tx, ty); // 发送给服务器，同步其他玩家窗口中的移动
+        if (this.playground.mode === "multi mode") {
+          this.playground.mps.send_move_to(tx, ty); // 发送给服务器，同步其他玩家窗口中的移动
         }
       } else if (e.which === 1) {
         // 左键鼠标，释放技能
-        let tx = (e.clientX - rect.left) / outer.playground.scale;
-        let ty = (e.clientY - rect.top) / outer.playground.scale;
-        if (outer.cur_skill === "fireball") {
-          if (outer.fireball_coldtime > outer.eps) return false;
-          let fireball = outer.shoot_fireball(tx, ty);
-          if (outer.playground.mode === "multi mode") {
-            outer.playground.mps.send_shoot_fireball(tx, ty, fireball.uuid);
+        let tx = (e.clientX - rect.left) / this.playground.scale;
+        let ty = (e.clientY - rect.top) / this.playground.scale;
+        if (this.cur_skill === "fireball") {
+          if (this.fireball_coldtime > this.eps) return false;
+          let fireball = this.shoot_fireball(tx, ty);
+          if (this.playground.mode === "multi mode") {
+            this.playground.mps.send_shoot_fireball(tx, ty, fireball.uuid);
           }
-        } else if (outer.cur_skill === "flash") {
-          if (outer.flash_coldtime > outer.eps) return false;
-          outer.flash(tx, ty);
-          if (outer.playground.mode === "multi mode") {
-            outer.playground.mps.send_flash(tx, ty);
+        } else if (this.cur_skill === "flash") {
+          if (this.flash_coldtime > this.eps) return false;
+          this.flash(tx, ty);
+          if (this.playground.mode === "multi mode") {
+            this.playground.mps.send_flash(tx, ty);
           }
         }
 
-        outer.cur_skill = null;
+        this.cur_skill = null;
       }
     });
-    this.playground.game_map.$canvas.keydown(function (e) {
+    this.playground.game_map.$canvas.keydown((e) => {
       if (e.which === 13) {
         // enter键
-        if (outer.playground.mode === "multi mode") {
+        if (this.playground.mode === "multi mode") {
           // 多人模式下打开聊天输入框
-          outer.playground.chat_field.show_input();
+          this.playground.chat_field.show_input();
           return false;
         }
       } else if (e.which === 27) {
         // esc键
-        if (outer.playground.mode === "multi mode") {
-          outer.playground.chat_field.hide_input();
+        if (this.playground.mode === "multi mode") {
+          this.playground.chat_field.hide_input();
           return false;
         }
       }
-      if (outer.playground.state !== "fighting") return true;
+      if (this.playground.state !== "fighting") return true;
 
       if (e.which === 81) {
-        if (outer.fireball_coldtime > outer.eps) return true;
+        if (this.fireball_coldtime > this.eps) return true;
 
         // Q键
-        outer.cur_skill = "fireball";
+        this.cur_skill = "fireball";
         return false;
       } else if (e.which === 70) {
-        if (outer.flash_coldtime > outer.eps) return true;
+        if (this.flash_coldtime > this.eps) return true;
         // F键
-        outer.cur_skill = "flash";
+        this.cur_skill = "flash";
         return false;
       }
     });
