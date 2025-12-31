@@ -27,7 +27,7 @@ class MultiPlayer(AsyncWebsocketConsumer):
         self.room_name = ""
         self.uuid = data['uuid']
         # Make socket
-        transport = TSocket.TSocket('localhost', 9090)
+        transport = TSocket.TSocket('113.44.43.227', 9090)
 
         # Buffering is critical. Raw sockets are very slow
         transport = TTransport.TBufferedTransport(transport)
@@ -105,16 +105,16 @@ class MultiPlayer(AsyncWebsocketConsumer):
             if self.room_name:
                 cache.set(self.room_name, players, 3600)
         else:
-            def db_update_update_player_score(username, score):
+            def db_update_player_score(username, score):
                 player = Player.objects.get(user__username=username)
                 player.score += score
                 player.save()
             
             for player in players:
                 if player["hp"] <= 0:
-                    await database_sync_to_async(db_update_update_player_score)(player["username"], -5)
+                    await database_sync_to_async(db_update_player_score)(player["username"], -5)
                 else:
-                    await database_sync_to_async(db_update_update_player_score)(player["username"], 10)
+                    await database_sync_to_async(db_update_player_score)(player["username"], 10)
                 
                 
             for player in players:

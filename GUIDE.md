@@ -210,7 +210,7 @@ python manage.py migrate
 - 启动 WebSocket 服务：
 
   ```shell
-  daphne -b 0.0.0.0 -p 5015 acapp.asgi:application
+  daphne -b 0.0.0.0 -p 8081 acapp.asgi:application
   ```
 
 - 远程 Redis 需开放 6379 端口，修改 `/etc/redis/redis.conf` 允许外部连接并关闭保护模式
