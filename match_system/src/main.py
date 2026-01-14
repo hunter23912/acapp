@@ -1,3 +1,4 @@
+#!/root/.pyenv/shims/python
 import glob
 import sys
 sys.path.insert(0, glob.glob('../../')[0]) # 导入的包的路径：/项目根目录

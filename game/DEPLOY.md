@@ -86,42 +86,105 @@ chmod -R 755 /var/www/ballgame/static
 #### 多个微服务部署示例（主项目 8000 端口，websocket 8001 端口，匹配系统微服务 8002 端口）
 
 ```bash
+vim /etc/nginx/sites-available/django
+
 server {
-    listen 80;
-    listen 443 ssl http2;
-    server_name yourdomain.com www.yourdomain.com;
+    server_name ballgame.jaxenwang.top;   # 只匹配这个子域名
 
-    # ... 你的 SSL 配置、证书等 ...
-
-    # 主 HTTP 项目（假设用 gunicorn 或 uvicorn 跑在 unix socket 或 8000）
+    # 所有请求转发给 Gunicorn（用 unix socket）
     location / {
-        proxy_pass http://unix:/run/main.sock;   # 或 http://127.0.0.1:8000;
+        proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # WebSocket 专用路径（注意：必须以 /ws/ 开头，与你路由一致）
-    location /ws/ {
-        proxy_pass http://127.0.0.1:8001;           # 你的 websocket 后端端口
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # 重要：WebSocket 长连接需要较长的超时
-        proxy_read_timeout 3600s;      # 1小时，根据需要调整
-        proxy_send_timeout 3600s;
+    # 静态文件直接由 Nginx 处理（性能最好）
+    location /static/ {
+        alias /var/www/ballgame/static/;   # 改成你的实际路径
     }
 
-    # 如果你的匹配系统也需要通过 Nginx 代理（可选）
-    location /match/ {
-        proxy_pass http://127.0.0.1:8002/;
-        # ... 普通 http 代理头 ...
-    }
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/ballgame.jaxenwang.top/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/ballgame.jaxenwang.top/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
 }
+server {
+    if ($host = ballgame.jaxenwang.top) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80;
+    server_name ballgame.jaxenwang.top;
+    return 404; # managed by Certbot
+
+
+}
+```
+
+#### 使用 systemd 管理服务
+
+- `match` 服务
+
+```bash
+sudo vim /etc/systemd/system/ballgame-match.service
+```
+
+##### `ballgame-match.service` 内容
+
+```ini
+[Unit]
+Description=Ballgame Match Microservice
+After=network.target
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/root/acapp/match_system/src
+Environment="PYTHONUNBUFFERED=1"
+# 使用绝对路径指向 Python 解释器
+ExecStart=/root/acapp/match_system/src/main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+- `web` 服务
+
+```bash
+sudo vim /etc/systemd/system/ballgame-web.service
+```
+
+##### `ballgame-web.service` 内容
+
+```ini
+[Unit]
+Description=Ballgame Django Web (Gunicorn)
+After=network.target
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/root/acapp
+# 环境变量确保 Python 输出不被缓存，方便查看日志
+Environment="PYTHONUNBUFFERED=1"
+# 这里的路径请确保是指向你虚拟环境或系统 Python 的 gunicorn
+ExecStart=/root/.pyenv/shims/gunicorn --bind 127.0.0.1:8000 acapp.wsgi:application
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.targe
+```
+
+#### 看 systemd 服务日志
+
+```bash
+journalctl -u ballgame-web -n 20 --no-pager
 ```
