@@ -40,8 +40,8 @@ class Pool:
     
     def check_match(self, a, b):
         dt = abs(a.score - b.score)
-        a_max_dif = a.waiting_time * 50 # 每位玩家允许的最大分差，随等待时间增加而增加
-        b_max_dif = b.waiting_time * 50
+        a_max_dif = a.waiting_time * 100 # 每位玩家允许的最大分差，随等待时间增加而增加
+        b_max_dif = b.waiting_time * 100
         return dt <= a_max_dif and dt <= b_max_dif
     
     def match_success(self, ps):
@@ -60,7 +60,7 @@ class Pool:
                 'hp': 100,
             })
             
-        cache.set(room_name, players, timeout=3600) # 缓存房间信息，过期时间1小时
+        cache.set(room_name, players, timeout=600) # 缓存房间信息，过期时间10分钟
             
         # 先加完玩家，再广播
         for p in ps:
@@ -125,7 +125,7 @@ def worker():
 if __name__ == '__main__':
     handler = MatchHandler()
     processor = Match.Processor(handler)
-    transport = TSocket.TServerSocket(host='0.0.0.0', port=9090)
+    transport = TSocket.TServerSocket(host='0.0.0.0', port=8001)
     tfactory = TTransport.TBufferedTransportFactory()
     pfactory = TBinaryProtocol.TBinaryProtocolFactory()
 

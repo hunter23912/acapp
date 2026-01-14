@@ -45,21 +45,21 @@ class Player extends AcGameObject {
   }
 
   start() {
-    this.playground.player_count++;
-    this.playground.notice_board.write("已就绪: " + this.playground.player_count + "人");
-
-    if (this.playground.player_count >= 3) {
-      this.playground.state = "fighting";
-      this.playground.notice_board.write("游戏开始!");
-    }
-
+    // 只有"我"进入时更新通知板，其他玩家通过 receive_create_player 更新
     if (this.character === "me") {
+      this.playground.notice_board.write("已就绪: " + this.playground.players.length + "人");
       this.add_listening_events();
     } else if (this.character === "robot") {
       // 创建电脑玩家随机移动
       let tx = (Math.random() * this.playground.width) / this.playground.scale;
       let ty = (Math.random() * this.playground.height) / this.playground.scale;
       this.move_to(tx, ty);
+    }
+
+    // 检查是否可以开始游戏（所有角色类型都检查）
+    if (this.playground.players.length >= 3) {
+      this.playground.state = "fighting";
+      this.playground.notice_board.write("游戏开始!");
     }
   }
 

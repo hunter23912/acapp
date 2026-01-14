@@ -1,8 +1,9 @@
 class MultiPlayerSocket {
   constructor(playground) {
     this.playground = playground;
+    const ws_protocol = window.location.protocol === "https:" ? "wss" : "ws";
 
-    this.ws = new WebSocket("ws://localhost:8081/wss/multiplayer/?token=" + playground.root.access);
+    this.ws = new WebSocket(`${ws_protocol}://ballgame.jaxenwang.top/wss/multiplayer/?token=` + playground.root.access);
 
     this.start();
   }
@@ -62,6 +63,7 @@ class MultiPlayerSocket {
     for (let player of this.playground.players) {
       if (player.uuid === uuid) return false;
     }
+    console.log("receive_create_player", uuid, username);
     let player = new Player(
       this.playground,
       this.playground.width / 2 / this.playground.scale,
@@ -75,6 +77,15 @@ class MultiPlayerSocket {
     );
     player.uuid = uuid;
     this.playground.players.push(player);
+
+    // 同步更新通知板显示
+    this.playground.notice_board.write("已就绪: " + this.playground.players.length + "人");
+
+    // 检查是否可以开始游戏
+    if (this.playground.players.length >= 3) {
+      this.playground.state = "fighting";
+      this.playground.notice_board.write("游戏开始!");
+    }
   }
 
   send_move_to(tx, ty) {

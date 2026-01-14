@@ -32,7 +32,7 @@ class MultiPlayer(AsyncWebsocketConsumer):
         self.room_name = None
         self.uuid = data['uuid']
         # Make socket
-        transport = TSocket.TSocket('113.44.43.227', 9090)
+        transport = TSocket.TSocket('localhost', 8001)
 
         # Buffering is critical. Raw sockets are very slow
         transport = TTransport.TBufferedTransport(transport)

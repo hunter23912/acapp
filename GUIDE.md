@@ -126,6 +126,16 @@ python manage.py migrate
 
 ### 5.1 集成 Redis
 
+```python
+from django.core.cache import cache
+```
+
+- `redis` 日志
+
+  ```shell
+  vim /var/log/redis/redis-server.log
+  ```
+
 - 安装依赖：
 
   ```shell
@@ -228,6 +238,15 @@ python manage.py migrate
 ## 8. 实现聊天系统
 
 - 实现类似于 LOL 游戏内的在线聊天功能
+
+- 快速查看`cache`
+
+```python
+from django.core.cache import cache
+
+def clear():
+    cache.clear()
+```
 
 ---
 

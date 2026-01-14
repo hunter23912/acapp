@@ -368,21 +368,21 @@ class Player extends AcGameObject {
   }
 
   start() {
-    this.playground.player_count++;
-    this.playground.notice_board.write("已就绪: " + this.playground.player_count + "人");
-
-    if (this.playground.player_count >= 3) {
-      this.playground.state = "fighting";
-      this.playground.notice_board.write("游戏开始!");
-    }
-
+    // 只有"我"进入时更新通知板，其他玩家通过 receive_create_player 更新
     if (this.character === "me") {
+      this.playground.notice_board.write("已就绪: " + this.playground.players.length + "人");
       this.add_listening_events();
     } else if (this.character === "robot") {
       // 创建电脑玩家随机移动
       let tx = (Math.random() * this.playground.width) / this.playground.scale;
       let ty = (Math.random() * this.playground.height) / this.playground.scale;
       this.move_to(tx, ty);
+    }
+
+    // 检查是否可以开始游戏（所有角色类型都检查）
+    if (this.playground.players.length >= 3) {
+      this.playground.state = "fighting";
+      this.playground.notice_board.write("游戏开始!");
     }
   }
 
@@ -859,8 +859,9 @@ class FireBall extends AcGameObject {
 class MultiPlayerSocket {
   constructor(playground) {
     this.playground = playground;
+    const ws_protocol = window.location.protocol === "https:" ? "wss" : "ws";
 
-    this.ws = new WebSocket("ws://localhost:8081/wss/multiplayer/?token=" + playground.root.access);
+    this.ws = new WebSocket(`${ws_protocol}://ballgame.jaxenwang.top/wss/multiplayer/?token=` + playground.root.access);
 
     this.start();
   }
@@ -920,6 +921,7 @@ class MultiPlayerSocket {
     for (let player of this.playground.players) {
       if (player.uuid === uuid) return false;
     }
+    console.log("receive_create_player", uuid, username);
     let player = new Player(
       this.playground,
       this.playground.width / 2 / this.playground.scale,
@@ -933,6 +935,15 @@ class MultiPlayerSocket {
     );
     player.uuid = uuid;
     this.playground.players.push(player);
+
+    // 同步更新通知板显示
+    this.playground.notice_board.write("已就绪: " + this.playground.players.length + "人");
+
+    // 检查是否可以开始游戏
+    if (this.playground.players.length >= 3) {
+      this.playground.state = "fighting";
+      this.playground.notice_board.write("游戏开始!");
+    }
   }
 
   send_move_to(tx, ty) {
@@ -1280,7 +1291,7 @@ class Settings {
   refresh_jwt_token() {
     setInterval(() => {
       $.ajax({
-        url: "http://localhost:8000/settings/token/refresh/",
+        url: "https://ballgame.jaxenwang.top/settings/token/refresh/",
         type: "POST",
         data: {
           refresh: this.root.refresh,
@@ -1293,13 +1304,13 @@ class Settings {
 
     setTimeout(() => {
       $.ajax({
-        url: "http://localhost:8000/settings/ranklist",
+        url: "https://ballgame.jaxenwang.top/settings/ranklist",
         type: "GET",
         headers: {
           Authorization: "Bearer " + this.root.access,
         },
         success: (resp) => {
-          console.log(resp);
+          console.log(`这里返回了排行榜${resp}`);
         },
       });
     }, 5000);
@@ -1308,7 +1319,7 @@ class Settings {
   acwing_login() {
     ("click acwing login");
     $.ajax({
-      url: "http://localhost:8000/settings/acwing/web/apply_code/",
+      url: "https://ballgame.jaxenwang.top/settings/acwing/web/apply_code/",
       type: "GET",
       success: (resp) => {
         if (resp.result === "success") {
@@ -1352,7 +1363,7 @@ class Settings {
     this.$login_error_message.empty();
 
     $.ajax({
-      url: "http://localhost:8000/settings/token/",
+      url: "https://ballgame.jaxenwang.top/settings/token/",
       type: "POST",
       data: {
         username,
@@ -1377,7 +1388,7 @@ class Settings {
     let password_confirm = this.$register_password_confirm.val();
     this.$register_error_message.empty();
     $.ajax({
-      url: "http://localhost:8000/settings/register/",
+      url: "https://ballgame.jaxenwang.top/settings/register/",
       type: "POST",
       data: {
         // JS当k-v一样时候，可以只写一个
@@ -1443,7 +1454,7 @@ class Settings {
 
   getinfo_acapp() {
     $.ajax({
-      url: "http://localhost:8000/settings/acwing/acapp/apply_code/",
+      url: "https://ballgame.jaxenwang.top/settings/acwing/acapp/apply_code/",
       type: "GET",
       success: (resp) => {
         if (resp.result === "success") {
@@ -1455,7 +1466,7 @@ class Settings {
 
   getinfo_web() {
     $.ajax({
-      url: "http://localhost:8000/settings/getinfo/",
+      url: "https://ballgame.jaxenwang.top/settings/getinfo/",
       type: "GET",
       data: { platform: this.platform },
       headers: {

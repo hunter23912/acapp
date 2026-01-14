@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-aq-9+1umj*p*680bmp+0%yg)8mm34vsz189zf1@e0m)^5!b1^j'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["localhost","ballgame.jaxenwang.top", "113.44.43.227"] # 未来上线时改成具体域名
 
@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ["localhost","ballgame.jaxenwang.top", "113.44.43.227"] # 未来
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'game.apps.GameConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -88,7 +89,7 @@ DATABASES = {
 CACHES = {
   'default': {
     'BACKEND': 'django_redis.cache.RedisCache',
-    'LOCATION': 'redis://113.44.43.227:6379/1',
+    'LOCATION': 'redis://127.0.0.1:6379/1',
     "OPTIONS": {
       "CLIENT_CLASS": "django_redis.client.DefaultClient",
     },
@@ -142,18 +143,16 @@ MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "https://q3236fea.natappfree.cc",  # 加上你的 natapp 域名
-    "http://q3236fea.natappfree.cc",   # 有时也建议加 http 版本
-]
 
 ASGI_APPLICATION = 'acapp.asgi.application'
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [('113.44.43.227', 6379)],
+            'hosts': [('127.0.0.1', 6379)],
+            # 另外两种指定数据库的方式
+            # 'hosts': [{'host': '127.0.0.1', 'port': 6379, 'db': 2}],
+            # 'hosts': ['redis://127.0.0.1:6379/2'],
         },
     },
 }

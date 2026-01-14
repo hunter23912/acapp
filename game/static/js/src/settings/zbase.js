@@ -123,7 +123,7 @@ class Settings {
   refresh_jwt_token() {
     setInterval(() => {
       $.ajax({
-        url: "http://localhost:8000/settings/token/refresh/",
+        url: "https://ballgame.jaxenwang.top/settings/token/refresh/",
         type: "POST",
         data: {
           refresh: this.root.refresh,
@@ -136,13 +136,13 @@ class Settings {
 
     setTimeout(() => {
       $.ajax({
-        url: "http://localhost:8000/settings/ranklist",
+        url: "https://ballgame.jaxenwang.top/settings/ranklist",
         type: "GET",
         headers: {
           Authorization: "Bearer " + this.root.access,
         },
         success: (resp) => {
-          console.log(resp);
+          console.log(`这里返回了排行榜${resp}`);
         },
       });
     }, 5000);
@@ -151,7 +151,7 @@ class Settings {
   acwing_login() {
     ("click acwing login");
     $.ajax({
-      url: "http://localhost:8000/settings/acwing/web/apply_code/",
+      url: "https://ballgame.jaxenwang.top/settings/acwing/web/apply_code/",
       type: "GET",
       success: (resp) => {
         if (resp.result === "success") {
@@ -195,7 +195,7 @@ class Settings {
     this.$login_error_message.empty();
 
     $.ajax({
-      url: "http://localhost:8000/settings/token/",
+      url: "https://ballgame.jaxenwang.top/settings/token/",
       type: "POST",
       data: {
         username,
@@ -220,7 +220,7 @@ class Settings {
     let password_confirm = this.$register_password_confirm.val();
     this.$register_error_message.empty();
     $.ajax({
-      url: "http://localhost:8000/settings/register/",
+      url: "https://ballgame.jaxenwang.top/settings/register/",
       type: "POST",
       data: {
         // JS当k-v一样时候，可以只写一个
@@ -286,7 +286,7 @@ class Settings {
 
   getinfo_acapp() {
     $.ajax({
-      url: "http://localhost:8000/settings/acwing/acapp/apply_code/",
+      url: "https://ballgame.jaxenwang.top/settings/acwing/acapp/apply_code/",
       type: "GET",
       success: (resp) => {
         if (resp.result === "success") {
@@ -298,7 +298,7 @@ class Settings {
 
   getinfo_web() {
     $.ajax({
-      url: "http://localhost:8000/settings/getinfo/",
+      url: "https://ballgame.jaxenwang.top/settings/getinfo/",
       type: "GET",
       data: { platform: this.platform },
       headers: {
