@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-aq-9+1umj*p*680bmp+0%yg)8mm34vsz189zf1@e0m)^5!b1^j'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ["localhost","q3236fea.natappfree.cc", "113.44.43.227"] # 未来上线时改成具体域名
+ALLOWED_HOSTS = ["localhost","ballgame.jaxenwang.top", "113.44.43.227"] # 未来上线时改成具体域名
 
 
 # Application definition
