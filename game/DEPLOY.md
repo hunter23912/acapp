@@ -165,7 +165,7 @@ sudo vim /etc/systemd/system/ballgame-web.service
 
 ```ini
 [Unit]
-Description=Ballgame Django Web (Gunicorn)
+Description=Ballgame Django Web (daphne)
 After=network.target
 
 [Service]
@@ -175,16 +175,22 @@ WorkingDirectory=/root/acapp
 # 环境变量确保 Python 输出不被缓存，方便查看日志
 Environment="PYTHONUNBUFFERED=1"
 # 这里的路径请确保是指向你虚拟环境或系统 Python 的 gunicorn
-ExecStart=/root/.pyenv/shims/gunicorn --bind 127.0.0.1:8000 acapp.wsgi:application
+ExecStart=/root/.pyenv/shims/daphne -b 127.0.0.1 -p 8000 acapp.asgi:application
 Restart=always
 RestartSec=3
 
 [Install]
-WantedBy=multi-user.targe
+WantedBy=multi-user.target
 ```
 
 #### 看 systemd 服务日志
 
 ```bash
 journalctl -u ballgame-web -n 20 --no-pager
+```
+
+#### 刷新 systemd 配置并启动服务
+
+```bash
+sudo systemctl daemon-reload
 ```
